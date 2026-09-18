@@ -58,11 +58,11 @@ export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 MODELS="$COMFYUI_DIR/models"
 
 log "下载 SoulX-FlashHead-1_3B（≈14.3GB）"
-huggingface-cli download Soul-AILab/SoulX-FlashHead-1_3B \
+hf download Soul-AILab/SoulX-FlashHead-1_3B \
   --local-dir "$MODELS/Soul-AILab/SoulX-FlashHead-1_3B"
 
 log "下载 wav2vec2-base-960h（≈360MB）"
-huggingface-cli download facebook/wav2vec2-base-960h \
+hf download facebook/wav2vec2-base-960h \
   --local-dir "$MODELS/wav2vec/facebook/wav2vec2-base-960h"
 
 log "下载 Breeze-TTS-2（$BREEZE_MODEL_LABEL）"
@@ -73,7 +73,7 @@ case "$BREEZE_MODEL_LABEL" in
   "int8 text encoder only")    BREEZE_WEIGHTS="Breeze-TTS-2-int8-text-encoder.safetensors" ;;
   *) echo "未知 BREEZE_MODEL_LABEL：$BREEZE_MODEL_LABEL" >&2; exit 1 ;;
 esac
-huggingface-cli download drbaph/Breeze-TTS-2-comfyui \
+hf download drbaph/Breeze-TTS-2-comfyui \
   --local-dir "$MODELS/breezetts2/drbaph_Breeze-TTS-2-comfyui" \
   --include "config.json" "generation_config.json" "tokenizer.json" "tokenizer_config.json" \
             "special_tokens_map.json" "audio_tokenizer/*" "$BREEZE_WEIGHTS"

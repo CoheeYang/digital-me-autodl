@@ -27,11 +27,11 @@ RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI /root/ComfyUI 
 
 # ---------- 权重（FlashHead 14.3G + wav2vec 0.4G + breeze int8-hybrid ≈5G，hf-mirror）----------
 ARG BREEZE_WEIGHTS="Breeze-TTS-2-int8-hybrid.safetensors"
-RUN huggingface-cli download Soul-AILab/SoulX-FlashHead-1_3B \
+RUN hf download Soul-AILab/SoulX-FlashHead-1_3B \
       --local-dir /root/ComfyUI/models/Soul-AILab/SoulX-FlashHead-1_3B && \
-    huggingface-cli download facebook/wav2vec2-base-960h \
+    hf download facebook/wav2vec2-base-960h \
       --local-dir /root/ComfyUI/models/wav2vec/facebook/wav2vec2-base-960h && \
-    huggingface-cli download drbaph/Breeze-TTS-2-comfyui \
+    hf download drbaph/Breeze-TTS-2-comfyui \
       --local-dir /root/ComfyUI/models/breezetts2/drbaph_Breeze-TTS-2-comfyui \
       --include "config.json" "generation_config.json" "tokenizer.json" "tokenizer_config.json" \
                 "special_tokens_map.json" "audio_tokenizer/*" "${BREEZE_WEIGHTS}"
