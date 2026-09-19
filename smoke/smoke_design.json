@@ -9,40 +9,74 @@
       "download_if_missing": true
     },
     "class_type": "BreezeTTS2LoadModel",
-    "_meta": { "title": "Breeze TTS 2 Load Model" }
+    "_meta": {
+      "title": "Breeze TTS 2 Load Model"
+    }
   },
   "4": {
-    "inputs": { "image": "__AVATAR__" },
+    "inputs": {
+      "image": "__AVATAR__"
+    },
     "class_type": "LoadImage",
-    "_meta": { "title": "Load Image" }
+    "_meta": {
+      "title": "Load Image"
+    }
   },
   "6": {
-    "inputs": { "model_type": "lite" },
+    "inputs": {
+      "model_type": "lite"
+    },
     "class_type": "RunningHub SoulX-FlashHead Loader",
-    "_meta": { "title": "RunningHub SoulX-FlashHead Loader" }
+    "_meta": {
+      "title": "RunningHub SoulX-FlashHead Loader"
+    }
   },
   "12": {
     "inputs": {
-      "breeze_model": ["10", 0],
+      "breeze_model": [
+        "10",
+        0
+      ],
       "text": "大家好，这是一次数字人管线的冒烟测试，声音由 breeze 生成，画面由 FlashHead 驱动。",
       "instruction": "一位沉稳清晰的中文课程讲师，吐字清楚，语速适中，语气专业而自然。",
       "cfg_scale": 4.0,
-      "seed": 42
+      "seed": 42,
+      "max_new_tokens": 1500,
+      "temperature": 0.9,
+      "top_k": 50,
+      "top_p": 1.0,
+      "repetition_penalty": 1.1,
+      "depth_temperature": 0.9,
+      "depth_top_k": 50,
+      "depth_top_p": 1.0
     },
     "class_type": "BreezeTTS2VoiceDesign",
-    "_meta": { "title": "Breeze TTS 2 Voice Design" }
+    "_meta": {
+      "title": "Breeze TTS 2 Voice Design"
+    }
   },
   "2": {
     "inputs": {
       "seed": 42,
       "width": 832,
       "height": 672,
-      "pipeline": ["6", 0],
-      "ref_audio": ["12", 0],
-      "avatar_image": ["4", 0]
+      "pipeline": [
+        "6",
+        0
+      ],
+      "ref_audio": [
+        "12",
+        0
+      ],
+      "avatar_image": [
+        "4",
+        0
+      ]
     },
     "class_type": "RunningHub SoulX-FlashHead Sampler",
-    "_meta": { "title": "RunningHub SoulX-FlashHead Sampler" }
+    "_meta": {
+      "title": "RunningHub SoulX-FlashHead Sampler"
+    }
   },
   "5": {
     "inputs": {
@@ -50,9 +84,14 @@
       "format": "auto",
       "codec": "auto",
       "fw_video_preview": "",
-      "video": ["2", 0]
+      "video": [
+        "2",
+        0
+      ]
     },
     "class_type": "SaveVideo",
-    "_meta": { "title": "Save Video" }
+    "_meta": {
+      "title": "Save Video"
+    }
   }
 }

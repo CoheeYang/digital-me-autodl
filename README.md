@@ -91,6 +91,47 @@ AUTODL_TOKEN=<AutoDL API token>
 - **首次提交慢**：breeze + FlashHead 权重装载约 1-3 分钟属正常；冷启动后单 chunk（~90s 口播）合成 lite 档分钟级。
 - **种子**：breeze 的 `seed=0` 是「随机」不是固定值——要可复现必须给正整数。
 
+## 镜像审查与验收流程（发版必读）
+
+1.0.0 的教训：镜像构建成功 ≠ 镜像能跑（漏装依赖直到起容器才炸）。发新版必须过三道关卡：
+
+### 第一道：一键机器验收（push 前的硬关卡）
+
+```bash
+smoke/verify-image.sh harborpush.suanleme.cn/coheey/digitalme-serve:1.0.1
+# 三关全绿才 docker push；任何一关红，看输出里的日志尾巴定位
+```
+
+| 关卡 | 抓什么 bug |
+|---|---|
+| ① 启动冒烟（容器起 + `/system_stats` 200） | 依赖缺失、入口脚本坏、端口不通（1.0.0 那类） |
+| ② 节点契约（`/object_info` 断言） | 节点没装上/被改名；下拉值漂移（如 `int8 hybrid (recommended)`）；输入形状变更（reference_audio 成对契约）；权重目录缺失 |
+| ③ 工作流校验（提交 smoke 工作流拿 prompt_id） | 接线/类型不合法、参数被拒（拿到 prompt_id = ComfyUI 校验通过；GPU 宿主继续真出片，CPU 宿主执行失败属预期） |
+
+无 GPU 宿主自动降级 CPU 验证模式（--cpu + triton 导入补丁，只影响 triton 后端注册，不影响依赖/节点判定）。
+
+### 第二道：人工 diff 审查（版本间对比，5 分钟）
+
+```bash
+# Dockerfile 变更审查：只许预期内的改动出现
+git diff v1.0.0..HEAD -- Dockerfile
+# 依赖快照对比：新增包应能对应到「有意升级的 requirements」，出现不相干的新包要追查
+docker run --rm --entrypoint python <旧镜像> -m pip freeze | sort > /tmp/freeze-old.txt
+docker run --rm --entrypoint python <新镜像> -m pip freeze | sort > /tmp/freeze-new.txt
+diff /tmp/freeze-old.txt /tmp/freeze-new.txt
+# 节点版本对比（git rev 变化必须是有意的）
+docker run --rm --entrypoint sh <镜像> -c 'cd /root/ComfyUI && git rev-parse --short HEAD && for d in custom_nodes/*; do echo "$d $(git -C $d rev-parse --short HEAD)"; done'
+```
+
+### 第三道：共绩真机验收（切 SUANLI_IMAGE 前的最终关）
+
+本地过了 ≠ GPU 环境能跑。共绩拉起新版部署后跑 `smoke/smoke.sh` 出真 mp4，通过后才改主仓库 `SUANLI_IMAGE` 指向新版。
+
+### 版本纪律
+
+- 版本号第三位递增（1.0.0 → 1.0.1）；**旧 tag 不删不覆盖**（回滚=改回 SUANLI_IMAGE 指旧 tag）
+- 升级 breeze/FlashHead 节点（git rev 变化）时，第二道 diff 审查必做——上游接口变更正是②③关要抓的
+
 ## 已知问题
 
 - **1.0.0 镜像漏装 ComfyUI 自身 requirements**（起容器即 `ModuleNotFoundError: sqlalchemy/torchsde`）：Dockerfile 只装了自定义节点依赖。修复：Dockerfile 增加 ComfyUI requirements 安装（排除 torch，基础镜像已带）后重打 **1.0.1**。**本地 `docker run` + `/system_stats` 200 通过前不要 push**。
