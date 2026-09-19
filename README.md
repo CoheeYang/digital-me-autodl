@@ -91,6 +91,27 @@ AUTODL_TOKEN=<AutoDL API token>
 - **首次提交慢**：breeze + FlashHead 权重装载约 1-3 分钟属正常；冷启动后单 chunk（~90s 口播）合成 lite 档分钟级。
 - **种子**：breeze 的 `seed=0` 是「随机」不是固定值——要可复现必须给正整数。
 
+## 已知问题
+
+- **1.0.0 镜像漏装 ComfyUI 自身 requirements**（起容器即 `ModuleNotFoundError: sqlalchemy/torchsde`）：Dockerfile 只装了自定义节点依赖。修复：Dockerfile 增加 ComfyUI requirements 安装（排除 torch，基础镜像已带）后重打 **1.0.1**。**本地 `docker run` + `/system_stats` 200 通过前不要 push**。
+- 无 GPU 宿主（笔记本）跑本镜像看 GUI：需补丁 comfy_kitchen 的 triton 无条件导入（try/except）+ `main.py --cpu`；GPU 环境不受影响（详见 digital-me 主仓库 docs/12 §6.2）。
+- 大镜像（30GB+）构建对宿主盘空间要求 ≥ 镜像体积×1.5；Docker Desktop 数据盘必须不在满盘上（VHDX 无法扩展 = I/O error = 守护进程段错误）。
+
+## 本地查看工作流 GUI（无 GPU 也可以）
+
+```bash
+docker run -d --name dm-serve-gui -p 127.0.0.1:6006:6006 \
+  -e PROXY_USER=dhsvc -e PROXY_PASS=<自定密码> \
+  --entrypoint bash <镜像> -c "
+  chmod 644 /etc/nginx/.dhhtpasswd 2>/dev/null;
+  python -m pip install -q torchsde sqlalchemy alembic av;   # 1.0.0 缺依赖的补装（1.0.1 起不需要）
+  cd /root/ComfyUI && sed -i 's/^from .backends import triton as _triton_backend/try:\n    from .backends import triton as _triton_backend\nexcept Exception:\n    pass/' /opt/conda/lib/python3.11/site-packages/comfy_kitchen/__init__.py;
+  nginx; exec python main.py --cpu --listen 127.0.0.1 --port 8188"
+# 浏览器开 http://127.0.0.1:6006（Basic: dhsvc/<密码>），拖入 smoke/smoke_design.json
+```
+
+共绩部署起来后同样有完整 GUI：部署 accessUrl 浏览器打开 + Basic 凭据即可（GPU 环境，可真实执行）。
+
 ## License
 
 本仓库脚本与配置为 MIT；所拉取的第三方节点与模型权重遵循各自许可（FlashHead 见其仓库；**Breeze-TTS-2 权重为 research/non-commercial，商用需 BreezeBlue 授权**）。
